@@ -229,6 +229,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
+      white-space: nowrap;
     }
 
     .brand-subtitle {
@@ -1000,6 +1001,62 @@
     }
 
     @media (max-width: 600px) {
+      /* Mobile Header Optimization */
+      .app-header {
+        padding: 8px 12px;
+        gap: 8px;
+      }
+      .brand-wrap {
+        gap: 8px;
+        min-width: 0;
+      }
+      .brand-logo {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+      }
+      .brand-logo svg {
+        width: 18px;
+        height: 18px;
+      }
+      .brand-title {
+        font-size: 0.95rem;
+        white-space: nowrap;
+      }
+      .brand-subtitle {
+        display: none; /* Hide subtitle on mobile to give full space to brand title */
+      }
+      .header-actions {
+        gap: 6px;
+      }
+      .connection-pill {
+        padding: 6px 8px;
+        gap: 0;
+      }
+      #statusText {
+        display: none; /* Dot only on mobile */
+      }
+      .btn-header {
+        width: 34px;
+        height: 34px;
+      }
+      .btn-new-chat {
+        padding: 0;
+        width: 34px;
+        height: 34px;
+        justify-content: center;
+      }
+      .btn-new-chat span {
+        display: none; /* Plus icon only on mobile */
+      }
+
+      /* Mobile Disclaimer */
+      .disclaimer-bar {
+        padding: 6px 12px;
+        font-size: 0.725rem;
+      }
+
+      /* Mobile Composer */
       .btn-action-tool span {
         display: none; /* Icon-only on mobile */
       }
