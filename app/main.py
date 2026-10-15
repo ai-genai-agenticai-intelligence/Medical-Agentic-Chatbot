@@ -24,6 +24,7 @@ class ChatRequest(BaseModel):
     message: str = Field(min_length=1,max_length=4000)
     history: list[dict[str,str]] = Field(default_factory=list,max_length=10)
     image_data: str | None = None
+    image: str | None = None
 
 def auth(authorization: str | None):
     if settings.api_token and not secrets.compare_digest(authorization or '',f'Bearer {settings.api_token}'):
@@ -67,6 +68,7 @@ def health():
 
 
 
+@app.post('/chat')
 @app.post('/api/chat')
 def chat(
     payload: ChatRequest,
@@ -85,7 +87,8 @@ def chat(
     config = {"configurable": {"thread_id": thread_id}}
 
     try:
-        observation=inspect_image(payload.image_data)
+        raw_img = payload.image_data or payload.image
+        observation=inspect_image(raw_img)
 
         state=graph.invoke(
             {
@@ -100,9 +103,29 @@ def chat(
             config=config
         )
 
+        sources = []
+        for x in state.get('kb', []):
+            sources.append({
+                'type': 'pdf',
+                'label': f"Gale Encyclopedia of Medicine (2002) - Page {x.get('page')}",
+                'page': x.get('page'),
+                'year': 2002,
+                'score': x.get('score'),
+                'excerpt': x.get('text', '')
+            })
+        for x in state.get('web', []):
+            sources.append({
+                'type': 'web',
+                'label': x.get('title', 'Clinical Web Reference'),
+                'title': x.get('title', ''),
+                'url': x.get('url', ''),
+                'year': 2024,
+                'excerpt': x.get('content', '')
+            })
+
         return {
             'answer':state['answer'],
-            'sources': [{'type':'pdf','page':x['page'],'score':x['score']} for x in state['kb']]+[{'type':'web','url':x['url'],'title':x['title']} for x in state['web']],
+            'sources': sources,
             'tools': ['pinecone']+(['tavily'] if state['route']=='web' and settings.tavily_api_key else [])+(['vision'] if observation else []),
             'conversation_id':thread_id
         }
