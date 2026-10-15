@@ -27,8 +27,11 @@ class ChatRequest(BaseModel):
     image: str | None = None
 
 def auth(authorization: str | None):
-    if settings.api_token and not secrets.compare_digest(authorization or '',f'Bearer {settings.api_token}'):
-        raise HTTPException(status_code=401,detail='Invalid API token')
+    token = (settings.api_token or '').strip()
+    if not token or token in ('replace-with-long-random-secret', 'your-secret-token', 'change-me'):
+        return
+    if not secrets.compare_digest(authorization or '', f'Bearer {token}'):
+        raise HTTPException(status_code=401, detail='Invalid API token')
 
 
 def inspect_image(data):

@@ -218,3 +218,8 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# SQLite local memory runtime database
+medical_memory.db
+medical_memory.db-shm
+medical_memory.db-wal
