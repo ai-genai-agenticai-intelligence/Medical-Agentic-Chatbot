@@ -43,19 +43,24 @@ def inspect_image(data):
     except (ValueError,IndexError) as exc:
         raise HTTPException(status_code=400,detail=f'Invalid image: {exc}')
 
-    try:
-        client = genai.Client(api_key=settings.effective_gemini_api_key)
-        result = client.models.generate_content(
-            model=settings.gemini_vision_model,
-            contents=[
-                types.Part.from_bytes(data=raw, mime_type=mime),
-                'Describe only objectively visible medical-relevant features. Do not diagnose, estimate severity, or assert absence of illness. If image unclear, say so.'
-            ]
-        )
-        return result.text or ''
-    except Exception as exc:
-        print('Vision error:', repr(exc), flush=True)
-        return ''
+    client = genai.Client(api_key=settings.effective_gemini_api_key)
+    models_to_try = [settings.gemini_vision_model, 'gemini-2.5-flash-lite', 'gemini-2.5-flash']
+    for m in models_to_try:
+        try:
+            result = client.models.generate_content(
+                model=m,
+                contents=[
+                    types.Part.from_bytes(data=raw, mime_type=mime),
+                    'Describe only objectively visible medical-relevant features (e.g. skin redness, lesions, rash distribution, swelling, pustules). Do not diagnose, estimate severity, or assert absence of illness. If image unclear, say so.'
+                ]
+            )
+            return result.text or ''
+        except Exception as exc:
+            print(f'Vision error on {m}:', repr(exc), flush=True)
+            if 'RESOURCE_EXHAUSTED' in str(exc) or '429' in str(exc):
+                continue
+            break
+    return ''
 
 
 @app.get('/',response_class=HTMLResponse)

@@ -18,9 +18,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     gemini_api_key: str = ''
     google_api_key: str = ''
-    gemini_chat_model: str = 'gemini-2.5-flash'
+    gemini_chat_model: str = 'gemini-2.5-flash-lite'
     gemini_embed_model: str = 'models/gemini-embedding-001'
-    gemini_vision_model: str = 'gemini-2.5-flash'
+    gemini_vision_model: str = 'gemini-2.5-flash-lite'
     pinecone_api_key: str = ''
     tavily_api_key: str = ''
     pinecone_index: str = 'medical-agent-gemini'

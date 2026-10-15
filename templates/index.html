@@ -1540,6 +1540,12 @@
           </select>
         </div>
 
+        <div class="setting-item">
+          <label class="setting-label" for="tokenInput">API Access Token (Optional)</label>
+          <input type="password" class="setting-select" id="tokenInput" placeholder="Leave blank unless API_TOKEN is set in .env">
+          <span style="font-size: 0.725rem; color: var(--text-soft);">Only needed if you configure an API_TOKEN in your environment</span>
+        </div>
+
         <hr style="border: none; border-top: 1px solid var(--border-light); margin: 4px 0;">
 
         <div class="setting-item">
@@ -1781,12 +1787,18 @@
           image: image || null
         };
 
+        const token = (localStorage.getItem('medguide_api_token') || '').trim();
+        const headers = {
+          'Content-Type': 'application/json',
+          'X-Conversation-ID': state.conversationId
+        };
+        if (token) {
+          headers['Authorization'] = 'Bearer ' + token;
+        }
+
         const res = await fetch('/chat', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Conversation-ID': state.conversationId
-          },
+          headers: headers,
           body: JSON.stringify(payload),
           signal: signal
         });
@@ -2498,6 +2510,14 @@
         state.language = e.target.value;
         localStorage.setItem('medguide_lang', state.language);
       });
+
+      const tokenInput = document.getElementById('tokenInput');
+      if (tokenInput) {
+        tokenInput.value = localStorage.getItem('medguide_api_token') || '';
+        tokenInput.addEventListener('input', (e) => {
+          localStorage.setItem('medguide_api_token', e.target.value.trim());
+        });
+      }
 
       dom.clearChatBtn.addEventListener('click', () => {
         resetChat();

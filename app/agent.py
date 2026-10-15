@@ -65,9 +65,21 @@ def answer(state):
     for msg in state.get('history',[])[-8:]:
         history.append(HumanMessage(content=msg['content']) if msg['role']=='user' else AIMessage(content=msg['content']))
     user = f"Question: {state['question']}\nVisual observations (not diagnosis): {state.get('image_description','None')}\nHistorical PDF excerpts:\n{context or 'No relevant PDF excerpts'}\nExternal results:\n{websites or 'No external results'}"
-    llm=ChatGoogleGenerativeAI(model=settings.gemini_chat_model,temperature=0.1,google_api_key=settings.effective_gemini_api_key,timeout=45,max_retries=1)
-    response=llm.invoke([SystemMessage(content=SYSTEM),*history,HumanMessage(content=user)])
-    return {'answer':response.content}
+
+    models_to_try = [settings.gemini_chat_model, 'gemini-2.5-flash-lite', 'gemini-2.5-flash']
+    last_err = None
+    for m in models_to_try:
+        try:
+            llm = ChatGoogleGenerativeAI(model=m, temperature=0.1, google_api_key=settings.effective_gemini_api_key, timeout=45, max_retries=1)
+            response = llm.invoke([SystemMessage(content=SYSTEM), *history, HumanMessage(content=user)])
+            return {'answer': response.content}
+        except Exception as e:
+            last_err = e
+            if 'RESOURCE_EXHAUSTED' in str(e) or '429' in str(e):
+                print(f'Model {m} quota reached, trying fallback...', flush=True)
+                continue
+            raise
+    raise last_err
 
 
 
